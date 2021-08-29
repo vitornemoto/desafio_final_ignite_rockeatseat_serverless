@@ -1,0 +1,57 @@
+service:
+  name: ignitetodo
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+  - serverless-dynamodb-local
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  dynamodb:
+    stages:
+      -dev
+      -local
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: sa-est-1
+
+functions:
+    createTodo:
+      handler: src/functions/createTodo.handle
+      events:
+        - http:
+            path: /createTodo/{id}
+            method: POST
+            cors: true
+    listTodo:
+      handler: src/functions/listTodo.handle
+      events:
+        - http:
+            path: /listTodo/{id}
+            method: GET
+            cors: true
+resources:
+  Resources:
+    dbCertificatesUsers:
+      Type: AWS::DynamoDB::Table
+     
+      Properties:
+        TableName: users_todos
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
